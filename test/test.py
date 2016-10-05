@@ -35,7 +35,7 @@ class TestTadbit(unittest.TestCase):
         
         self.assertTrue(os.path.isfile(PATH+"/data/"+self.crm+".mat"), "Missing hic data.")
         
-        p = subprocess.check_call(["python", "01_model_and_analyze.py","--cfg",PATH+"/data/"+self.crm + ".cfg","--ncpus", "12"])
+        p = subprocess.check_call(["python", "01_model_and_analyze.py","--cfg",PATH+"/data/"+self.crm + ".cfg","--ncpus", "1"])
         
         # check correlation with real data
         orig_data = np.loadtxt(PATH+"/data/"+self.crm+".mat", delimiter='\t')
