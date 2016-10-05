@@ -38,7 +38,7 @@ _Author(s)_: François Serra, Davide Baù, David Castillo, Guillaume Filion, Mar
 
 _Date_: October 1st, 2016
 
-_Last known good IMP version_: [![build info](https://salilab.org/imp/systems/?sysstat=12&branch=master)](http://salilab.org/imp/systems/) [![build info](https://salilab.org/imp/systems/?sysstat=12&branch=develop)](http://salilab.org/imp/systems/)
+_Last known good IMP version_: [![build info](https://integrativemodeling.org/systems/?sysstat=22&branch=master)](http://integrativemodeling.org/systems/) [![build info](https://integrativemodeling.org/systems/?sysstat=22&branch=develop)](http://integrativemodeling.org/systems/)
 
 _Testable_: Yes.
 
