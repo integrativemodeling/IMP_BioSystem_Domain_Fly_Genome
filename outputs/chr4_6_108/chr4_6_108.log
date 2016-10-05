@@ -1,0 +1,30 @@
+[DEFAULT]   	Summary of arguments:
+[DEFAULT]  - Config. setting             beg to 60000
+[DEFAULT]  * Command setting             cfg to ../data/chr4.cfg
+[DEFAULT]  - Config. setting             crm to chr4
+[DEFAULT]  o Default setting            data to None
+[DEFAULT]  - Config. setting         dcutoff to 2
+[DEFAULT]  - Config. setting             end to 1080000
+[DEFAULT]  - Config. setting         lowfreq to -1.2:0:0.3
+[DEFAULT]  - Config. setting         maxdist to 100:800:200
+[DEFAULT]  * Command setting           ncpus to 4
+[DEFAULT]  - Config. setting       nkeep_mod to 100
+[DEFAULT]  - Config. setting       nkeep_opt to 10
+[DEFAULT]  - Config. setting     nmodels_mod to 500
+[DEFAULT]  - Config. setting     nmodels_opt to 50
+[DEFAULT]  - Config. setting            norm to ['chr4.mat']
+[DEFAULT]  o Default setting   optimize_only to False
+[DEFAULT]  - Config. setting          outdir to ../outputs/
+[DEFAULT]  - Config. setting             res to 10000
+[DEFAULT]  - Config. setting       root_path to ../data/
+[DEFAULT]  o Default setting           scale to 0.01
+[DEFAULT]  - Config. setting          upfreq to 0.0:1.2:0.3
+[DEFAULT]  o Default setting           usage to False
+[DEFAULT]  - Config. setting           xname to ['4_6_108']
+[DEFAULT]
+[DEFAULT]   ../data/chr4.mat
+[DEFAULT]   	Reading optimal parameters available in ../data/_optimal_params.tsv
+[DEFAULT]   	Finding optimal parameters for modeling (this can take long)...
+[DEFAULT]   		Optimal values: scale:0.01 maxdist:300.0 upper:0.0 lower:-0.6 dcutoff:2.0 with cc: 0.8244
+[DEFAULT]   	Modeling (this can take long)...
+[DEFAULT]   		Writing models, list and chimera files...

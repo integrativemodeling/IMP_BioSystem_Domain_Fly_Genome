@@ -1,0 +1,6 @@
+title: Modelling of a region of the fly genome 
+tags: [chromatin, model, drosophila melanogaster, TADs]
+prereqs: [python/scipy, python/numpy, python/argparse]
+test:
+    runtime: 24h
+    build: release 
