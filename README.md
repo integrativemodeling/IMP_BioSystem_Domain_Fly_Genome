@@ -47,4 +47,4 @@ _Parallelizeable_: Yes
 _Citation_:
  - Serra, F., Baù, D., Filion, G., & Marti-Renom, M. A. (2016).
 **Structural features of the fly chromatin colors revealed by automatic three-dimensional modeling.**
-*bioRxiv*. `doi:10.1101/036764 <http://biorxiv.org/cgi/content/short/036764>`_
+*bioRxiv*. [doi:10.1101/036764](http://biorxiv.org/cgi/content/short/036764)
