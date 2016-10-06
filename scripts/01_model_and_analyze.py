@@ -39,6 +39,7 @@ import logging
 from cPickle import load, dump
 from random import random
 from string import ascii_letters as letters
+from numpy import savetxt
 
     
 def load_hic_data(opts, xnames):
@@ -306,6 +307,8 @@ def main():
     logging.info("\tModeling (this can take long)...")
     models = model_region(exp, optpar, opts, name)
 
+    contact_matrix = get_contact_matrix(models,float(opts.scale))
+    
     # Save the models for easy visualization with
     # Chimera (http://www.cgl.ucsf.edu/chimera/)
     # Move into the cluster directory and run in the prompt
@@ -313,6 +316,8 @@ def main():
     logging.info("\t\tWriting models, list and chimera files...")
     if not os.path.exists(os.path.join(opts.outdir, name, 'models')):
             os.makedirs(os.path.join(opts.outdir, name, 'models'))
+    
+    savetxt(fname=os.path.join(opts.outdir, name, 'models', 'contact_matrix.tsv'),X=contact_matrix, delimiter='\t')
     write_xyz(directory=os.path.join(opts.outdir, name, 'models'),models=models)
     write_cmm(directory=os.path.join(opts.outdir, name, 'models'),models=models)
     write_json(directory=os.path.join(opts.outdir, name, 'models'),models=models)
@@ -326,6 +331,40 @@ def main():
     out.write("center\nscale 25")
     out.close()
 
+def square_3d_dist(part1, part2, models):
+        """
+        same as median_3d_dist, but return the square of the distance instead
+        """
+        part1 -= 1
+        part2 -= 1
+        return [(models[mdl]['x'][part1] - models[mdl]['x'][part2])**2 +
+                (models[mdl]['y'][part1] - models[mdl]['y'][part2])**2 +
+                (models[mdl]['z'][part1] - models[mdl]['z'][part2])**2
+                for mdl in models]
+        
+def get_contact_matrix(models, scale):
+    """
+    Returns a matrix with the number of interactions observed below a given
+    cutoff distance.
+
+    :param None models: if None (default) the contact matrix will be computed
+       using all the models. A list of numbers corresponding to a given set
+       of models can be passed
+    
+    :returns: matrix frequency of interaction
+    """
+    matrix = [[float(0.0) for _ in xrange(len(models[0]['x']))]
+              for _ in xrange(len(models[0]['x']))]
+    cutoff = int(2 * int(models[0]['description']['resolution']) * scale)
+    cutoff = cutoff**2
+    for i in xrange(len(models[0]['x'])):
+        for j in xrange(i + 1, len(models[0]['x'])):
+            val = len([k for k in square_3d_dist(
+                i + 1, j + 1, models=models)
+                       if k < cutoff])
+            matrix[i][j] = matrix[j][i] = float(val) / len(models)  # * 100
+    return matrix    
+        
 def write_cmm(directory, models, color='index'):
         """
         Save a model in the cmm format, read by Chimera

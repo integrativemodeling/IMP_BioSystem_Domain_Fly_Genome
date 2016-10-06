@@ -3,6 +3,8 @@ import subprocess
 import sys
 import os
 import warnings
+import numpy as np
+from scipy.stats import spearmanr
 
 PATH = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
 
@@ -28,16 +30,19 @@ class TestTadbit(unittest.TestCase):
             warnings.warn('IMP not found, skipping test\n')
             return
         os.chdir(os.path.join(PATH, 'scripts'))
-
+        
+        name = '{0}_{1}_{2}'.format(self.crm, self.bini, self.bend)
+        
         self.assertTrue(os.path.isfile(PATH+"/data/"+self.crm+".mat"), "Missing hic data.")
         
         p = subprocess.check_call(["python", "01_model_and_analyze.py","--cfg",PATH+"/data/"+self.crm + ".cfg","--ncpus", "12"])
-        # check sha
-        correct_sha = "0b42fb54-7188-5b47-a922-63b5db43ae42"
-        with open(PATH+"/outputs/chr"+self.name+"/models/models.json") as fh:
-            sha_lines = [x for x in fh.readlines() if x.lstrip().startswith('"uuid"')]
-        sha = ((sha_lines[0]).lstrip())[9:45]
-        self.assertEqual(sha, correct_sha)
+        
+        # check correlation with real data
+        orig_data = np.loadtxt(PATH+"/data/"+self.crm+".mat", delimiter='\t')
+        final_data = np.loadtxt(PATH+"/outputs/"+name+"/models/contact_matrix.tsv", delimiter='\t')
+        corr = spearmanr(np.array(orig_data).flatten(),np.array(final_data).flatten())
+        
+        self.assertTrue(corr[0] > 0.75)
         if CHKTIME:
             print '12', time() - t0
 
