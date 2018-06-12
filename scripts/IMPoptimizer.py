@@ -779,8 +779,9 @@ def _get_restraints():
              'model' : Model(),
              'rs'    : None, # 2.6.1 compat 
              'ps'    : None}
-    model['ps'] = ListSingletonContainer(IMP.core.create_xyzr_particles(
-        model['model'], len(LOCI), RADIUS, 100000))
+    model['ps'] = ListSingletonContainer(model['model'],
+        IMP.core.create_xyzr_particles(model['model'], len(LOCI),
+                                       RADIUS, 100000))
     model['ps'].set_name("")
 
     # set container
@@ -883,8 +884,9 @@ def generate_IMPmodel(rand_init):
              'rs'    : None, # 2.6.1 compat
              'ps'    : None,
              'pps'   : None}
-    model['ps'] = ListSingletonContainer(IMP.core.create_xyzr_particles(
-        model['model'], len(LOCI), RADIUS, 100000))
+    model['ps'] = ListSingletonContainer(model['model'],
+        IMP.core.create_xyzr_particles(model['model'], len(LOCI),
+                                       RADIUS, 100000))
     model['ps'].set_name("")
 
     # initialize each particles
