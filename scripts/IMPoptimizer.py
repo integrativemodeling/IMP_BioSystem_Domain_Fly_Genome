@@ -795,12 +795,12 @@ def _get_restraints():
     #     raise noti
     
     for i in range(0, len(LOCI)):
-        p = model['ps'].get_particle(i)
+        p = model['ps'].get(i)
         p.set_name(str(LOCI[i]))
         #p.set_value(model['rk'], RADIUS)
     restraints = {}
     for i in range(len(LOCI)):
-        p1 = model['ps'].get_particle(i)
+        p1 = model['ps'].get(i)
         x = p1.get_name()
         if model['container']['shape'] == 'sphere':
             ub  = IMP.core.HarmonicUpperBound(
@@ -814,7 +814,7 @@ def _get_restraints():
                 model['rs'].add_restraint(rss) # 2.6.1 compat
             rss.evaluate(False)
         for j in range(i+1, len(LOCI)):
-            p2 = model['ps'].get_particle(j)
+            p2 = model['ps'].get(j)
             y = p2.get_name()
             typ, dist, frc = addHarmonicPair(model, p1, p2, x, y, j, dry=True)
             if VERBOSE >= 1:
@@ -891,7 +891,7 @@ def generate_IMPmodel(rand_init):
 
     # initialize each particles
     for i in range(0, len(LOCI)):
-        p = model['ps'].get_particle(i)
+        p = model['ps'].get(i)
         p.set_name(str(LOCI[i]))
         # computed following the relationship with the 30nm vs 40nm fiber
         #p.set_value(model['rk'], RADIUS)
@@ -954,7 +954,7 @@ def generate_IMPmodel(rand_init):
         pass
     o.set_return_best(True)
     fk = IMP.core.XYZ.get_xyz_keys()
-    ptmp = model['ps'].get_particles()
+    ptmp = model['ps'].get()
     mov = IMP.core.NormalMover(ptmp, fk, 0.25)
     o.add_mover(mov)
     # o.add_optimizer_state(log)
@@ -1049,7 +1049,7 @@ def generate_IMPmodel(rand_init):
                        'radius'     : None,
                        'cluster'    : 'Singleton',
                        'rand_init'  : str(rand_init)})
-    for part in model['ps'].get_particles():
+    for part in model['ps'].get():
         result['x'].append(part.get_value(x))
         result['y'].append(part.get_value(y))
         result['z'].append(part.get_value(z))
@@ -1065,10 +1065,10 @@ def addAllHarmonics(model):
     Add harmonics to all pair of particles.
     """
     for i in range(len(LOCI)):
-        p1 = model['ps'].get_particle(i)
+        p1 = model['ps'].get(i)
         x = p1.get_name()
         for j in range(i+1, len(LOCI)):
-            p2 = model['ps'].get_particle(j)
+            p2 = model['ps'].get(j)
             y = p2.get_name()
             addHarmonicPair(model, p1, p2, x, y, j)
 
@@ -1108,7 +1108,7 @@ def addHarmonicPair(model, p1, p2, x, y, j, dry=False):
                 return ("addHu", dist, kforce)
     # SHORT RANGE DISTANCE BETWEEN TWO SEQDIST = 2
     elif seqdist == 2:
-        p3 = model['ps'].get_particle(j-1)
+        p3 = model['ps'].get(j-1)
         kforce = CONFIG['kforce']
         dist = (p1.get_value(model['rk']) + p2.get_value(model['rk'])
                 + 2.0 * p3.get_value(model['rk']))
