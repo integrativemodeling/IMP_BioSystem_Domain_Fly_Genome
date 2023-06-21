@@ -30,13 +30,18 @@ belongs the message.
 """
 
 # MatPlotLib not asking for X11
+from __future__ import print_function
 import csv
 import uuid
 from argparse import ArgumentParser, HelpFormatter
 from IMPoptimizer import IMPoptimizer, get_hic_zscores
 import os, sys
 import logging
-from cPickle import load, dump
+import functools
+try:
+    from cPickle import load, dump
+except ImportError:
+    from pickle import load, dump
 from random import random
 from string import ascii_letters as letters
 from numpy import savetxt
@@ -50,8 +55,8 @@ def load_hic_data(opts, xnames):
         with open(opts.norm[0], 'r') as f_data:
             reader = csv.reader(f_data, delimiter="\t")
             data = list(reader)
-            for i in xrange(len(data)):
-                for j in xrange(len(data[0])):
+            for i in range(len(data)):
+                for j in range(len(data[0])):
                     data[i][j] = float(data[i][j])
     else:
         return
@@ -105,27 +110,30 @@ def optimize(results, opts, name):
     logpath = os.path.join(
         opts.outdir, name, '%s_optimal_params%s.tsv' % (name, optname))
 
-    tmp_name = ''.join([letters[int(random()*52)]for _ in xrange(50)])
+    tmp_name = ''.join([letters[int(random()*52)]for _ in range(50)])
 
-    tmp = open('_tmp_results_' + tmp_name, 'w')
+    tmp = open('_tmp_results_' + tmp_name, 'wb')
     dump(results, tmp)
     tmp.close()
     
-    tmp = open('_tmp_opts_' + tmp_name, 'w')
+    tmp = open('_tmp_opts_' + tmp_name, 'wb')
     dump(opts, tmp)
     tmp.close()
     
     tmp = open('_tmp_optim_' + tmp_name + '.py', 'w')
     tmp.write('''
-from cPickle import load, dump
+try:
+    from cPickle import load, dump
+except ImportError:
+    from pickle import load, dump
 
 tmp_name = "%s"
 
-results_file = open("_tmp_results_" + tmp_name)
+results_file = open("_tmp_results_" + tmp_name, "rb")
 results = load(results_file)
 results_file.close()
 
-opts_file = open("_tmp_opts_" + tmp_name)
+opts_file = open("_tmp_opts_" + tmp_name, "rb")
 opts = load(opts_file)
 opts_file.close()
 
@@ -148,7 +156,7 @@ results.run_grid_search(n_cpus=opts.ncpus, off_diag=2, verbose=True,
                         maxdist_range=maxdist, scale_range=scale,
                         dcutoff_range=dcutoff)
 
-tmp = open("_tmp_results_" + tmp_name, "w")
+tmp = open("_tmp_results_" + tmp_name, "wb")
 dump(results, tmp)
 tmp.close()
 ''' % (tmp_name, name))
@@ -159,7 +167,7 @@ tmp.close()
     tmp.close()
     os.system("python _tmp_optim_%s.py" % tmp_name)
 
-    results_file = open("_tmp_results_" + tmp_name)
+    results_file = open("_tmp_results_" + tmp_name, "rb")
     results = load(results_file)
     results_file.close()
     os.system('rm -f _tmp_results_%s' % (tmp_name))
@@ -201,30 +209,33 @@ def model_region(exp, optpar, opts, name):
     """
     zscores, values, zeros = get_hic_zscores(exp, len(exp[0]))
 
-    tmp_name = ''.join([letters[int(random()*52)]for _ in xrange(50)])
+    tmp_name = ''.join([letters[int(random()*52)]for _ in range(50)])
     
     
-    tmp = open('_tmp_zscore_' + tmp_name, 'w')
+    tmp = open('_tmp_zscore_' + tmp_name, 'wb')
     dump([zscores, values, zeros, optpar], tmp)
     tmp.close()
 
-    tmp = open('_tmp_opts_' + tmp_name, 'w')
+    tmp = open('_tmp_opts_' + tmp_name, 'wb')
     dump(opts, tmp)
     tmp.close()
 
     tmp = open('_tmp_model_' + tmp_name + '.py', 'w')
     tmp.write('''
-from cPickle import load, dump
+try:
+    from cPickle import load, dump
+except ImportError:
+    from pickle import load, dump
 from IMPoptimizer import generate_3d_models
 import os
 
 tmp_name = "%s"
 
-zscore_file = open("_tmp_zscore_" + tmp_name)
+zscore_file = open("_tmp_zscore_" + tmp_name, "rb")
 zscores, values, zeros, optpar = load(zscore_file)
 zscore_file.close()
 
-opts_file = open("_tmp_opts_" + tmp_name)
+opts_file = open("_tmp_opts_" + tmp_name, "rb")
 opts = load(opts_file)
 opts_file.close()
 
@@ -233,7 +244,7 @@ coords = {"crm"  : opts.crm,
           "start": opts.beg,
           "end"  : opts.end}
 
-zeros = tuple([i not in zeros for i in xrange(opts.end - opts.beg + 1)])
+zeros = tuple([i not in zeros for i in range(opts.end - opts.beg + 1)])
 
 models, bad_models =  generate_3d_models(zscores, opts.res, nloci,
                             values=values, n_models=opts.nmodels_mod,
@@ -244,7 +255,7 @@ models, bad_models =  generate_3d_models(zscores, opts.res, nloci,
                             config=optpar, verbose=0.5,
                             coords=coords, zeros=zeros)
 # Save models
-tmp = open("_tmp_models_" + tmp_name, "w")
+tmp = open("_tmp_models_" + tmp_name, "wb")
 dump(models, tmp)
 tmp.close()
 ''' % (tmp_name))
@@ -254,7 +265,7 @@ tmp.close()
     os.system('rm -f _tmp_zscore_%s' % (tmp_name))
     os.system('rm -f _tmp_model_%s.py' % (tmp_name))
     os.system('rm -f _tmp_opts_%s' % (tmp_name))
-    models_file = open("_tmp_models_" + tmp_name)
+    models_file = open("_tmp_models_" + tmp_name, "rb")
     models = load(models_file)
     models_file.close()
     
@@ -353,12 +364,12 @@ def get_contact_matrix(models, scale):
     
     :returns: matrix frequency of interaction
     """
-    matrix = [[float(0.0) for _ in xrange(len(models[0]['x']))]
-              for _ in xrange(len(models[0]['x']))]
+    matrix = [[float(0.0) for _ in range(len(models[0]['x']))]
+              for _ in range(len(models[0]['x']))]
     cutoff = int(2 * int(models[0]['description']['resolution']) * scale)
     cutoff = cutoff**2
-    for i in xrange(len(models[0]['x'])):
-        for j in xrange(i + 1, len(models[0]['x'])):
+    for i in range(len(models[0]['x'])):
+        for j in range(i + 1, len(models[0]['x'])):
             val = len([k for k in square_3d_dist(
                 i + 1, j + 1, models=models)
                        if k < cutoff])
@@ -380,7 +391,7 @@ def write_cmm(directory, models, color='index'):
             color_res = []
             if isinstance(color, str):
                 if color == 'index':
-                    for n in xrange(len(models[model_nbr]['x'])):
+                    for n in range(len(models[model_nbr]['x'])):
                         red = float(n + 1) / len(models[model_nbr]['x'])
                         color_res.append((red, 0, 1 - red))
                 else:
@@ -394,7 +405,7 @@ def write_cmm(directory, models, color='index'):
                     'radius=\"' + #str(30) +
                     str(models[model_nbr]['radius']) +
                     '\" note=\"%s\"/>\n')
-            for i in xrange(len(models[model_nbr]['x'])):
+            for i in range(len(models[model_nbr]['x'])):
                 out += form % (i + 1,
                                models[model_nbr]['x'][i], models[model_nbr]['y'][i], models[model_nbr]['z'][i],
                                color_res[i][0], color_res[i][1], color_res[i][2], i + 1)
@@ -402,7 +413,7 @@ def write_cmm(directory, models, color='index'):
                     'g=\"1\" b=\"1\" radius=\"' + str(10) +
                     # str(self['radius']/2) +
                     '\"/>\n')
-            for i in xrange(1, len(models[model_nbr]['x'])):
+            for i in range(1, len(models[model_nbr]['x'])):
                 out += form % (i, i + 1)
             out += '</marker_set>\n'
     
@@ -430,7 +441,7 @@ def write_xyz(directory, models):
             path_f = '%s/model.%s.xyz' % (directory, models[model_nbr]['rand_init'])
             out = ''
             form = "%s\t%s\t%.3f\t%.3f\t%.3f\n"
-            for i in xrange(len(models[model_nbr]['x'])):
+            for i in range(len(models[model_nbr]['x'])):
                 out += form % (
                     i + 1,
                     '%s:%s-%s' % (
@@ -443,6 +454,15 @@ def write_xyz(directory, models):
             out_f.write(out)
             out_f.close()
         return None
+
+def hexbytes(b):
+    """
+    Return a hexadecimal representation of bytes.
+    """
+    if sys.version_info[0] >= 3:
+        return b.hex()
+    else:
+        return b.encode('hex')
 
 def write_json(directory, models, color='index'):
     """
@@ -461,7 +481,7 @@ def write_json(directory, models, color='index'):
     
     if isinstance(color, str):
         if color == 'index':
-            for n in xrange(len(models[model_nbr]['x'])):
+            for n in range(len(models[model_nbr]['x'])):
                 red = float(n + 1) / len(models[model_nbr]['x'])
                 color_res.append((red, 0, 1 - red))
         else:
@@ -546,9 +566,9 @@ def write_json(directory, models, color='index'):
                 ['%.0f,%.0f,%.0f' % (model['x'][i],
                                      model['y'][i],
                                      model['z'][i])
-                 for i in xrange(len(model['x']))]) + ']}')
+                 for i in range(len(model['x']))]) + ']}')
     fil['xyz'] = ',\n'.join(fil['xyz'])
-    fil['sha'] = str(uuid.uuid5(uuid.UUID('TADbit'.encode('hex').zfill(32)), fil['xyz']))
+    fil['sha'] = str(uuid.uuid5(uuid.UUID(hexbytes(b'TADbit').zfill(32)), fil['xyz']))
     fil['restr'] = '[]'
     fil['cluster'] = '[' + ','.join(['[' + models[c]['rand_init'] + ']' for c in models]) + ']'
     fil['centroid'] = '[' + ','.join([models[c]['rand_init'] for c in models]) + ']'
@@ -668,13 +688,13 @@ def get_options():
 
 
     if opts.usage:
-        print __doc__
+        print(__doc__)
         exit()
 
     log = '\tSummary of arguments:\n'
     # merger opts with CFG file and write summary
-    args = reduce(lambda x, y: x + y, [i.strip('-').split('=')
-                                       for i in sys.argv])
+    args = functools.reduce(lambda x, y: x + y, [i.strip('-').split('=')
+                                                 for i in sys.argv])
     new_opts = {}
     if opts.cfg:
         for line in open(opts.cfg):
@@ -787,13 +807,13 @@ def get_options():
 
     # update path to Hi-C data adding root directory
     if opts.root_path and opts.data[0]:
-        for i in xrange(len(opts.data)):
+        for i in range(len(opts.data)):
             logging.info(os.path.join(opts.root_path, opts.data[i]))
             opts.data[i] = os.path.join(opts.root_path, opts.data[i])
 
     # update path to Hi-C norm adding root directory
     if opts.root_path and opts.norm[0]:
-        for i in xrange(len(opts.norm)):
+        for i in range(len(opts.norm)):
             logging.info(os.path.join(opts.root_path, opts.norm[i]))
             opts.norm[i] = os.path.join(opts.root_path, opts.norm[i])
 
