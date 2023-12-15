@@ -3,12 +3,17 @@
 
 
 """
+from __future__ import print_function
+import itertools
 from math      import log10, fabs, pow as power
 from scipy.stats                    import spearmanr
 from scipy                         import polyfit
 from os.path                       import exists
 from sys                           import stdout
-from cPickle                       import dump, load
+try:
+    from cPickle                       import dump, load
+except ImportError:
+    from pickle                       import dump, load
 from sys                           import stderr
 import numpy           as np
 import multiprocessing as mu
@@ -258,7 +263,7 @@ class IMPoptimizer(object):
                                     stderr.write(verb + str(round(result, 4))
                                                  + '\n')
                                 else:
-                                    print verb + str(round(result, 4))
+                                    print(verb + str(round(result, 4)))
                             continue
                         tmp = {'kforce'   : 5,
                                'lowrdist' : 100,
@@ -287,8 +292,8 @@ class IMPoptimizer(object):
                                 if result < sub_result:
                                     result = sub_result
                                     cutoff = my_round(cut)
-                        except Exception, e:
-                            print '  SKIPPING: %s' % e
+                        except Exception as e:
+                            print('  SKIPPING: %s' % e)
                             result = 0
                             cutoff = my_round(dcutoff_arange[0])
                         if verbose:
@@ -299,7 +304,7 @@ class IMPoptimizer(object):
                                 stderr.write(verb + str(round(result, 4))
                                              + '\n')
                             else:
-                                print verb + str(round(result, 4))
+                                print(verb + str(round(result, 4)))
                         # store
                         self.results[(scale, maxdist,
                                       upfreq, lowfreq, cutoff)] = result
@@ -324,7 +329,7 @@ class IMPoptimizer(object):
             stderr.write('WARNING: no optimization done yet\n')
             return
         best = ((None, None, None, None), 0.0)
-        for (sca, mxd, ufq, lfq, cut), val in self.results.iteritems():
+        for (sca, mxd, ufq, lfq, cut), val in self.results.items():
             if val > best[-1]:
                 best = ((sca, mxd, ufq, lfq, cut), val)
         if with_corr:
@@ -394,7 +399,7 @@ class IMPoptimizer(object):
                                 key=lambda x: self.results[
                                     (scale, maxdist, upfreq, lowfreq, x)])[0]
                         except IndexError:
-                            print 'Missing dcutoff', (scale, maxdist, upfreq, lowfreq)
+                            print('Missing dcutoff', (scale, maxdist, upfreq, lowfreq))
                             continue
                         try:
                             result = self.results[(scale, maxdist,
@@ -402,7 +407,7 @@ class IMPoptimizer(object):
                             out.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (
                                 scale, maxdist, upfreq, lowfreq, cut, result))
                         except KeyError:
-                            print 'KeyError', (scale, maxdist, upfreq, lowfreq, cut, result)
+                            print('KeyError', (scale, maxdist, upfreq, lowfreq, cut, result))
                             continue
         out.close()
 
@@ -464,8 +469,8 @@ class IMPoptimizer(object):
         model_matrix = self.get_contact_matrix(cutoff=cutoff)
         oridata = []
         moddata = []
-        for i in xrange(len(self.norm)):
-            for j in xrange(i + off_diag, len(self.norm)):
+        for i in range(len(self.norm)):
+            for j in range(i + off_diag, len(self.norm)):
                 if not self.norm[i][j] > 0:
                     continue
                 oridata.append(self.norm[i][j])
@@ -478,13 +483,13 @@ class IMPoptimizer(object):
         
         models = [m for m in self.__models]
         
-        matrix = [[float('nan') for _ in xrange(self.nloci)]
-                  for _ in xrange(self.nloci)]
+        matrix = [[float('nan') for _ in range(self.nloci)]
+                  for _ in range(self.nloci)]
         if not cutoff:
             cutoff = int(2 * self.resolution * self._config['scale'])
         cutoff = cutoff**2
-        for i in xrange(self.nloci):
-            for j in xrange(i + 1, self.nloci):
+        for i in range(self.nloci):
+            for j in range(i + 1, self.nloci):
                 val = len([k for k in self.__square_3d_dist(
                     i + 1, j + 1)
                            if k < cutoff])
@@ -534,8 +539,8 @@ def zscore(values):
     """
     # get the log trasnform values
     nozero_log(values)
-    mean_v = np.mean(values.values())
-    std_v  = np.std (values.values())
+    mean_v = np.mean(list(values.values()))
+    std_v  = np.std (list(values.values()))
     # replace values by z-score
     for i in values:
         values[i] = (values[i] - mean_v) / std_v
@@ -562,14 +567,14 @@ def get_hic_zscores(norm, size):
     zeros  = {}
     zscores = {}
     
-    for i in xrange(size):
+    for i in range(size):
         if not norm[i][i]:
             zeros[i] = i 
     
-    for i in xrange(size):
+    for i in range(size):
         if i in zeros:
             continue
-        for j in xrange(i + 1, size):
+        for j in range(i + 1, size):
             if j in zeros:
                 continue
             if (not norm[i][j]):
@@ -579,10 +584,10 @@ def get_hic_zscores(norm, size):
                 
     # compute Z-score
     zscore(values)
-    for i in xrange(size):
+    for i in range(size):
         if i in zeros:
             continue
-        for j in xrange(i + 1, size):
+        for j in range(i + 1, size):
             if j in zeros:
                 continue
             if (i, j) in zeros:
@@ -726,7 +731,7 @@ def generate_3d_models(zscores, resolution, nloci, start=1, n_models=5000,
         global NSLOPE, NINTERCEPT
         xarray = [zscores[i][j] for i in zscores for j in zscores[i]
                   if abs(int(i) - int(j)) <= (close_bins + 1)]
-        yarray = [RADIUS * 2 for _ in xrange(len(xarray))]
+        yarray = [RADIUS * 2 for _ in range(len(xarray))]
         NSLOPE, NINTERCEPT = polyfit(xarray, yarray, 1)
         
         global LOCI
@@ -754,18 +759,19 @@ def generate_3d_models(zscores, resolution, nloci, start=1, n_models=5000,
                            'start'             : resolution * coords['start'],
                            'end'               : resolution * coords['end'],
                            'resolution'        : resolution}
-        for i, m in enumerate(models.values() + bad_models.values()):
+        for i, m in enumerate(itertools.chain(models.values(),
+                                              bad_models.values())):
             m['index'] = i
             if coords:
                 m['description'] = description
         if outfile:
             if exists(outfile):
-                old_models, old_bad_models = load(open(outfile))
+                old_models, old_bad_models = load(open(outfile, 'rb'))
             else:
                 old_models, old_bad_models = {}, {}
             models.update(old_models)
             bad_models.update(old_bad_models)
-            out = open(outfile, 'w')
+            out = open(outfile, 'wb')
             dump((models, bad_models), out)
             out.close()
         else:
@@ -843,7 +849,7 @@ def multi_process_model_generation(n_cpus, n_models, n_keep, keep_all):
 
     pool = mu.Pool(n_cpus)
     jobs = {}
-    for rand_init in xrange(START, n_models + START):
+    for rand_init in range(START, n_models + START):
         jobs[rand_init] = pool.apply_async(generate_IMPmodel,
                                            args=(rand_init,))
 
@@ -851,7 +857,7 @@ def multi_process_model_generation(n_cpus, n_models, n_keep, keep_all):
     pool.join()
 
     results = []
-    for rand_init in xrange(START, n_models + START):
+    for rand_init in range(START, n_models + START):
         results.append((rand_init, jobs[rand_init].get()))   
 
     models = {}
@@ -1006,7 +1012,7 @@ def generate_IMPmodel(rand_init):
         o.set_kt(temperature)
         log_energies.append(o.optimize(STEPS))
         if verbose == 3:
-            print i, log_energies[-1], o.get_kt()
+            print(i, log_energies[-1], o.get_kt())
         # Calculate the score variation and check if the optimization
         # can be stopped or not
         if lownrj > 0:
@@ -1029,7 +1035,7 @@ def generate_IMPmodel(rand_init):
     #    temperature = alpha * (1.1 * nrounds - i) / nrounds
     #    o.set_kt(temperature)
     #    e = o.optimize(steps)
-    #    print str(i) + " " + str(e) + " " + str(o.get_kt())
+    #    print(str(i) + " " + str(e) + " " + str(o.get_kt()))
 
     try:
         log_energies.append(model['model'].evaluate(False))
@@ -1037,8 +1043,8 @@ def generate_IMPmodel(rand_init):
         log_energies.append(model['rs'].evaluate(False)) # 2.6.1 compat
     if verbose >=1:
         if verbose >= 2 or not rand_init % 100:
-            print 'Model %s IMP Objective Function: %s' % (
-                rand_init, log_energies[-1])
+            print('Model %s IMP Objective Function: %s' % (
+                rand_init, log_energies[-1]))
     x, y, z, radius = (FloatKey("x"), FloatKey("y"),
                        FloatKey("z"), FloatKey("radius"))
     result = IMPmodel({'log_objfun' : log_energies,
@@ -1054,8 +1060,8 @@ def generate_IMPmodel(rand_init):
         result['y'].append(part.get_value(y))
         result['z'].append(part.get_value(z))
         if verbose == 3:
-            print (part.get_name(), part.get_value(x), part.get_value(y),
-                   part.get_value(z), part.get_value(radius))
+            print((part.get_name(), part.get_value(x), part.get_value(y),
+                   part.get_value(z), part.get_value(radius)))
     # gets radius from last particle, assuming that all are the same
     result['radius'] = part.get_value(radius)
     return result # rand_init, result
